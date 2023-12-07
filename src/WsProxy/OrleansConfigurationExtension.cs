@@ -13,7 +13,13 @@ public static class OrleansConfigurationExtension
             }
             else
             {
-                // todo for production, az table clustering, k8s hosting
+                siloBuilder
+                    .UseKubernetesHosting()
+                    .UseAzureStorageClustering(clusteringOptions =>
+                    {
+                        clusteringOptions.TableName = "WsProxyClustering";
+                        clusteringOptions.ConfigureTableServiceClient(Environment.GetEnvironmentVariable("STORAGE_CONNECTION_STRING"));
+                    });
             }
             
             siloBuilder

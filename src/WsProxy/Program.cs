@@ -24,7 +24,7 @@ app.MapGet("/{id}/info", async (string id, IClusterClient clusterClient) =>
 app.MapGet("/{id}/.ws", async (string id, string? webSocketServerUrl, HttpContext httpContext, 
         HttpContextResolver httpContextResolver, IClusterClient clusterClient) =>
     {
-        webSocketServerUrl ??= "ws://localhost:10000/.ws";
+        webSocketServerUrl ??= "ws://localhost:10010/.ws";
         
         if (!httpContext.WebSockets.IsWebSocketRequest)
             return Results.BadRequest("Not a websocket request.");

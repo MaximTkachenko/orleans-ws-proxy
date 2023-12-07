@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ws-proxy-service-account
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-updater
+rules:
+- apiGroups: [ "" ]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list", "patch"] # TODO why we need patch?
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-updater-binding
+subjects:
+- kind: ServiceAccount
+  name: ws-proxy-service-account
+  apiGroup: ''
+roleRef:
+  kind: Role
+  name: pod-updater
+  apiGroup: ''
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-proxy
+  labels:
+    orleans/serviceId: ws-proxy
+spec:
+  selector:
+    matchLabels:
+      orleans/serviceId: ws-proxy
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        # This label is used to identify the service to Orleans
+        orleans/serviceId: ws-proxy
+
+        # This label is used to identify an instance of a cluster to Orleans.
+        # Typically, this will be the same value as the previous label, or any
+        # fixed value.
+        # In cases where you are not using rolling deployments (for example,
+        # blue/green deployments),
+        # this value can allow for distinct clusters which do not communicate
+        # directly with each others,
+        # but which still share the same storage and other resources.
+        orleans/clusterId: ws-proxy
+    spec:
+      serviceAccountName: ws-proxy-service-account
+      containers:
+        - name: proxy
+          image: ws-proxy:1701872700
+          imagePullPolicy: IfNotPresent # for minikube
+          ports:
+          # Define the ports which Orleans uses
+          - containerPort: 11111
+          - containerPort: 30000
+          - containerPort: 8080
+          - containerPort: 5223
+          env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: "Production"
+          # The Azure Storage connection string for clustering is injected as an
+          # environment variable
+          # It must be created separately using a command such as:
+          # > kubectl create secret generic az-storage-acct `
+          #     --from-file=key=./az-storage-acct.txt
+          # TODO add as secrets
+          - name: STORAGE_CONNECTION_STRING
+            value: "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://azurite-service:10000/devstoreaccount1;QueueEndpoint=http://azurite-service:10001/devstoreaccount1;TableEndpoint=http://azurite-service:10002/devstoreaccount1;"
+          # Configure settings to let Orleans know which cluster it belongs to
+          # and which pod it is running in
+          - name: ORLEANS_SERVICE_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['orleans/serviceId']
+          - name: ORLEANS_CLUSTER_ID
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.labels['orleans/clusterId']
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: DOTNET_SHUTDOWNTIMEOUTSECONDS
+            value: "120"
+          
+      terminationGracePeriodSeconds: 180
+  minReadySeconds: 60
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: ws-proxy-service
+spec:
+  ports:
+    - name: orleans-portal
+      port: 5223
+      targetPort: 5223
+  selector:
+    orleans/serviceId: ws-proxy
+  type: LoadBalancer

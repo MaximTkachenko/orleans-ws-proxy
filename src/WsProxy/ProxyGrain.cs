@@ -16,10 +16,10 @@ public class ProxyGrain : Grain, IProxyGrain
     private string _id;
 
     private WebSocket? _serverWebSocket;
-    private Task? _serverListening;
+    private Task? _serverListening = Task.CompletedTask;
     
     private WebSocket? _clientWebSocket;
-    private Task? _clientListening;
+    private Task _clientListening = Task.CompletedTask;
     private TaskCompletionSource? _clientListeningTcs;
 
     private CancellationTokenSource? _stopChatting;
@@ -39,7 +39,12 @@ public class ProxyGrain : Grain, IProxyGrain
 
     public override async Task OnDeactivateAsync(DeactivationReason reason, CancellationToken cancellationToken)
     {
-        // todo kill all tasks
+        if (_stopChatting != null)
+        {
+            await _stopChatting.CancelAsync();
+        }
+
+        await Task.WhenAll(_clientListening, _serverListening);
         
         await base.OnDeactivateAsync(reason, cancellationToken);
     }
@@ -77,31 +82,52 @@ public class ProxyGrain : Grain, IProxyGrain
 
     private async Task ServerListeningAsync()
     {
-        // todo handle when other one is disconnected
-        
-        await foreach (var message in _serverWebSocket.StartListeningAsync(_stopChatting.Token))
+        try
         {
-            if (message.Close)
-            {
-                break;
-            }
+            // todo handle when other one is disconnected
             
-            _clientWebSocket.SendAsync(message.Data, WebSocketMessageType.Text, message.EndOfMessage, _stopChatting.Token);
+            await foreach (var message in _serverWebSocket.StartListeningAsync(_stopChatting.Token))
+            {
+                if (message.Close)
+                {
+                    break;
+                }
+                
+                // since it's not an external call we shoudl do that
+                DelayDeactivation(TimeSpan.FromMinutes(10));
+                
+                _clientWebSocket.SendAsync(message.Data, WebSocketMessageType.Text, message.EndOfMessage, _stopChatting.Token);
+            }
+        }
+        catch (Exception ex)
+        {
+            
         }
     }
 
     private async Task ClientListeningAsync()
     {
-        // todo handle when other one is disconnected        
-        
-        await foreach (var message in _clientWebSocket.StartListeningAsync(_stopChatting.Token))
+        try
         {
-            if (message.Close)
+            // todo handle when other one is disconnected        
+
+            await foreach (var message in _clientWebSocket.StartListeningAsync(_stopChatting.Token))
             {
-                break;
+                if (message.Close)
+                {
+                    break;
+                }
+
+                // since it's not an external call we shoudl do that
+                DelayDeactivation(TimeSpan.FromMinutes(10));
+
+                _serverWebSocket.SendAsync(message.Data, WebSocketMessageType.Text, message.EndOfMessage,
+                    _stopChatting.Token);
             }
+        }
+        catch (Exception ex)
+        {
             
-            _serverWebSocket.SendAsync(message.Data, WebSocketMessageType.Text, message.EndOfMessage, _stopChatting.Token);
         }
     }
 }

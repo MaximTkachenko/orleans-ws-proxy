@@ -1,0 +1,1 @@
+& kubectl apply -f azurite-loadbalancer.yml
