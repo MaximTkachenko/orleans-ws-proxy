@@ -1,6 +1,0 @@
-@WsProxy_HostAddress = http://localhost:5044
-
-GET {{WsProxy_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

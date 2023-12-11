@@ -1,1 +1,1 @@
-& kubectl apply -f azurite-loadbalancer.yml
+& kubectl apply -f azurite.yml

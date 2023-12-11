@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WsProxy", "src\WsProxy\WsPr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WsProxy.Tests", "test\WsProxy.Tests\WsProxy.Tests.csproj", "{E23D038E-A2F4-4F86-9CA8-298963692864}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WsProxyClient", "src\WsProxyClient\WsProxyClient.csproj", "{370B139D-62A9-4414-8CDF-772229DE4615}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{E23D038E-A2F4-4F86-9CA8-298963692864}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E23D038E-A2F4-4F86-9CA8-298963692864}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E23D038E-A2F4-4F86-9CA8-298963692864}.Release|Any CPU.Build.0 = Release|Any CPU
+		{370B139D-62A9-4414-8CDF-772229DE4615}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{370B139D-62A9-4414-8CDF-772229DE4615}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{370B139D-62A9-4414-8CDF-772229DE4615}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{370B139D-62A9-4414-8CDF-772229DE4615}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

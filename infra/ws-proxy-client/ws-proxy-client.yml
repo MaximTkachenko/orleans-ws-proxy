@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-proxy-client
+  labels:
+    app: ws-proxy-client
+spec:
+  selector:
+    matchLabels:
+      app: ws-proxy-client
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ws-proxy-client
+    spec:
+      containers:
+        - name: ws-proxy-client
+          image: ws-proxy-client:1702322725
+          imagePullPolicy: IfNotPresent # for minikube
+          ports:
+          - containerPort: 8080
+          env:
+          - name: ASPNETCORE_ENVIRONMENT
+            value: "Production"
+          - name: WS_SERVER_URL
+            value: "ws://ws-echo-server-service:10010/.ws"
+          - name: WS_PROXY_CLUSTER_URL
+            value: "http://ws-proxy-api-service:8081"
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: ws-proxy-client-service
+spec:
+  ports:
+    - name: ws-proxy-client-swagger
+      port: 8082
+      targetPort: 8080
+  selector:
+    app: ws-proxy-client
+  type: LoadBalancer

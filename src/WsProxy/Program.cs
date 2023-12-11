@@ -14,18 +14,17 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseWebSockets();
 
-app.MapGet("/{id}/info", async (string id, IClusterClient clusterClient) =>
+app.MapGet("/{id}/info", async (string id, IClusterClient clusterClient, IHostEnvironment environment) => new 
     {
-        return await clusterClient.GetGrain<IProxyGrain>(id).GetInfoAsync();
+        IpAddress = await clusterClient.GetGrain<IProxyGrain>(id).GetInfoAsync(),
+        Port = int.Parse(Environment.GetEnvironmentVariable("HTTP_PORT"))
     })
     .WithName("GetProxyInfo")
     .WithOpenApi();
 
-app.MapGet("/{id}/.ws", async (string id, string? webSocketServerUrl, HttpContext httpContext, 
-        HttpContextResolver httpContextResolver, IClusterClient clusterClient) =>
+app.MapGet("/{id}/.ws", async (string id, string webSocketServerUrl, HttpContext httpContext, 
+        HttpContextResolver httpContextResolver, IClusterClient clusterClient, IHostEnvironment environment) =>
     {
-        webSocketServerUrl ??= "ws://localhost:10010/.ws";
-        
         if (!httpContext.WebSockets.IsWebSocketRequest)
             return Results.BadRequest("Not a websocket request.");
 

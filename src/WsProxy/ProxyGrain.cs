@@ -101,7 +101,7 @@ public class ProxyGrain : Grain, IProxyGrain
         }
         catch (Exception ex)
         {
-            
+            // todo close client if disconnected
         }
     }
 
@@ -127,7 +127,7 @@ public class ProxyGrain : Grain, IProxyGrain
         }
         catch (Exception ex)
         {
-            
+            // start timer if disconnected
         }
     }
 }

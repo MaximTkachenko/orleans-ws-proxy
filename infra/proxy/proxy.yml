@@ -55,7 +55,7 @@ spec:
       serviceAccountName: ws-proxy-service-account
       containers:
         - name: proxy
-          image: ws-proxy:1701872700
+          image: ws-proxy:1702322671
           imagePullPolicy: IfNotPresent # for minikube
           ports:
           # Define the ports which Orleans uses
@@ -98,6 +98,9 @@ spec:
                 fieldPath: status.podIP
           - name: DOTNET_SHUTDOWNTIMEOUTSECONDS
             value: "120"
+          - name: HTTP_PORT
+            value: "8080"
+
           
       terminationGracePeriodSeconds: 180
   minReadySeconds: 60
@@ -105,6 +108,19 @@ spec:
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: ws-proxy-api-service
+spec:
+  ports:
+    - name: http-ws-api
+      port: 8081
+      targetPort: 8080
+  selector:
+    orleans/serviceId: ws-proxy
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
