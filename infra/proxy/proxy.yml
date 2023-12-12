@@ -73,7 +73,7 @@ spec:
           #     --from-file=key=./az-storage-acct.txt
           # TODO add as secrets
           - name: STORAGE_CONNECTION_STRING
-            value: "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://azurite-service:10000/devstoreaccount1;QueueEndpoint=http://azurite-service:10001/devstoreaccount1;TableEndpoint=http://azurite-service:10002/devstoreaccount1;"
+            value: "AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://azurite-service:10020/devstoreaccount1;QueueEndpoint=http://azurite-service:10021/devstoreaccount1;TableEndpoint=http://azurite-service:10022/devstoreaccount1;"
           # Configure settings to let Orleans know which cluster it belongs to
           # and which pod it is running in
           - name: ORLEANS_SERVICE_ID
