@@ -38,7 +38,7 @@ spec:
   selector:
     matchLabels:
       orleans/serviceId: ws-proxy
-  replicas: 2
+  replicas: 3
   template:
     metadata:
       labels:

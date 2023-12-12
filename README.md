@@ -8,7 +8,7 @@
 
 TODO Slides:
 - distributed systems intro: stateless, stateful, data + behavior
-- describe orleans approach, main ideas liek: grain, silo, location transparancy, cluster provider, placement, activation, single threaded execution
+- describe orleans approach, main ideas liek: grain, silo, location transparancy, cluster provider, placement, activation, single threaded execution, state (cheap caching)
 - examples: proxy, loadbalancing, ocppbridge
 - architecture
 - minikube demo
