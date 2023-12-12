@@ -10,7 +10,10 @@ metadata:
 rules:
 - apiGroups: [ "" ]
   resources: ["pods"]
-  verbs: ["get", "watch", "list", "patch"] # TODO why we need patch?
+  # Patch scope is needed because k8s-hosting-for-orleans does two things:
+  # 1. It adds a label to the pod (if label isn't in the pod declaration) to identify the cluster it belongs to
+  # 2. Delete the pod if it has been amrked as dead by Orleans Runtime 
+  verbs: ["get", "watch", "list", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -59,10 +62,10 @@ spec:
           imagePullPolicy: IfNotPresent # for minikube
           ports:
           # Define the ports which Orleans uses
-          - containerPort: 11111
-          - containerPort: 30000
-          - containerPort: 8080
-          - containerPort: 5223
+          - containerPort: 11111 # for silo-to-silo
+          - containerPort: 30000 # for client-to-silo
+          - containerPort: 8080 # for http api
+          - containerPort: 5223 # for orleans dashboard
           env:
           - name: ASPNETCORE_ENVIRONMENT
             value: "Production"

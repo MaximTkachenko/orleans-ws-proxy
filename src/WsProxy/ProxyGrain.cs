@@ -93,7 +93,7 @@ public class ProxyGrain : Grain, IProxyGrain
                     break;
                 }
                 
-                // since it's not an external call we shoudl do that
+                // since it's not an external call we should do that
                 DelayDeactivation(TimeSpan.FromMinutes(10));
                 
                 _clientWebSocket.SendAsync(message.Data, WebSocketMessageType.Text, message.EndOfMessage, _stopChatting.Token);

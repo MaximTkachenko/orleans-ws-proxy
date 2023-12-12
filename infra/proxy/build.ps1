@@ -10,3 +10,5 @@ Set-Location ..\..\src\WsProxy
 & wsl minikube image load $tag
 
 Pop-Location
+
+$tag
