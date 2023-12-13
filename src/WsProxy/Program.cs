@@ -31,7 +31,7 @@ app.MapGet("/{id}/.ws", async (string id, string webSocketServerUrl, HttpContext
         try
         {
             if (!httpContextResolver.TryPut(id, httpContext))
-                return Results.BadRequest("We already have an HttpContext for this id.");
+                return Results.Conflict("We already have an HttpContext for this id.");
 
             // return result, probably Try
             await clusterClient.GetGrain<IProxyGrain>(id)

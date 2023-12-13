@@ -13,7 +13,8 @@ public static class ConnectionNameResolver
 
     public static string GetName(int i) => Names[i];
     
-    private static readonly string[] Left = {
+    private static readonly string[] Left = 
+    {
         "admiring",
         "adoring",
         "affectionate",
