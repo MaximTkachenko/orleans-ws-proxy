@@ -26,7 +26,6 @@ TODO Slides:
     - streaming support
     - state (cheap caching)
     - cluster provider
-- examples: proxy, ocppbridge (synchronicity)
 - architecture
 - show the code
 - minikube demo
