@@ -10,6 +10,7 @@ public class WebSocketsSupervisor : IHostedService
     private readonly MessageBus _bus;
     private readonly ILogger<WebSocketsSupervisor> _logger;
     private readonly IHttpClientFactory _http;
+    private readonly CancellationTokenSource _stopping = new();
 
     private Task _listeningTask;
     
@@ -24,23 +25,31 @@ public class WebSocketsSupervisor : IHostedService
     
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _listeningTask = ListeningAsync(cancellationToken);
+        _listeningTask = ListeningAsync();
         return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await _listeningTask;
+        await _stopping.CancelAsync();
+        try
+        {
+            await _listeningTask;
+        }
+        catch(OperationCanceledException) when(_stopping.IsCancellationRequested)
+        {
+            // it's ok
+        }
     }
 
-    private async Task ListeningAsync(CancellationToken cancellationToken)
+    private async Task ListeningAsync()
     {
         var webSocketServerUrl = Environment.GetEnvironmentVariable("WS_SERVER_URL");
         var clusterUrl = Environment.GetEnvironmentVariable("WS_PROXY_CLUSTER_URL");
         
-        while (!cancellationToken.IsCancellationRequested)
+        while (!_stopping.IsCancellationRequested)
         {
-            var command = await _bus.ReadCommandAsync(cancellationToken);
+            var command = await _bus.ReadCommandAsync(_stopping.Token);
 
             if (command.StartsWith(Commands.AddPrefix))
             {
@@ -53,16 +62,16 @@ public class WebSocketsSupervisor : IHostedService
                     try
                     {
                         var podLocation = await _http.CreateClient()
-                            .GetFromJsonAsync<LocationResponse>($"{clusterUrl}/{connectionId}/info", cancellationToken);
+                            .GetFromJsonAsync<LocationResponse>($"{clusterUrl}/{connectionId}/info", _stopping.Token);
 
                         var webSocket = new ClientWebSocket();
                         await webSocket.ConnectAsync(new Uri(
                                 $"ws://{podLocation.IpAddress}:{podLocation.Port}/{connectionId}/.ws?webSocketServerUrl=" +
                                 HttpUtility.UrlEncode(webSocketServerUrl)),
-                            cancellationToken);
+                            _stopping.Token);
 
                         _webSockets[connectionId] = (webSocket,
-                            ChattingAsync(connectionId, webSocket, cancellationToken));
+                            ChattingAsync(connectionId, webSocket, _stopping.Token));
 
                         _logger.LogInformation("New connection added {ConnectionId}", connectionId);
                     }

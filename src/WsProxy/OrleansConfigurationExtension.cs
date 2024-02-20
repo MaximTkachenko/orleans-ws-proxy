@@ -10,6 +10,12 @@ public static class OrleansConfigurationExtension
             {
                 siloBuilder
                     .UseLocalhostClustering();
+            
+                siloBuilder
+                    .UseDashboard(options =>
+                    {
+                        options.Port = 5223;
+                    });
             }
             else
             {
@@ -21,12 +27,6 @@ public static class OrleansConfigurationExtension
                         clusteringOptions.ConfigureTableServiceClient(Environment.GetEnvironmentVariable("STORAGE_CONNECTION_STRING"));
                     });
             }
-            
-            siloBuilder
-                .UseDashboard(options =>
-                {
-                    options.Port = 5223;
-                });
         });
 
         return builder;

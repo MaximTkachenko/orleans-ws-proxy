@@ -1,12 +1,18 @@
 using WsProxy;
+using WsProxy.Telemetry;
 using Host = WsProxy.Host;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.AddOrleans();
-builder.Services.AddSingleton<HttpContextResolver>();
+builder.Services
+    .AddEndpointsApiExplorer()
+    .AddSwaggerGen()
+    .AddSingleton<WsProxyMetrics>()
+    .AddSingleton<HttpContextResolver>();
+
+builder
+    .AddOpenTelemetry()
+    .AddOrleans();
 
 var app = builder.Build();
 

@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using WsProxy.Telemetry;
 
 namespace WsProxy;
 
@@ -11,6 +12,7 @@ public interface IProxyGrain : IGrainWithStringKey
 public class ProxyGrain : Grain, IProxyGrain
 {
     private readonly HttpContextResolver _httpContextResolver;
+    private readonly WsProxyMetrics _metrics;
     private readonly string _hostIp;
 
     private string _id;
@@ -24,15 +26,18 @@ public class ProxyGrain : Grain, IProxyGrain
 
     private CancellationTokenSource? _stopChatting;
     
-    public ProxyGrain(HttpContextResolver httpContextResolver)
+    public ProxyGrain(HttpContextResolver httpContextResolver,
+        WsProxyMetrics metrics)
     {
         _httpContextResolver = httpContextResolver;
+        _metrics = metrics;
         _hostIp = Host.IpAddress.ToString();
     }
 
     public override async Task OnActivateAsync(CancellationToken cancellationToken)
     {
         _id = this.GetPrimaryKeyString();
+        _metrics.ProxyGrainActivated();
         
         await base.OnActivateAsync(cancellationToken);
     }
@@ -45,6 +50,7 @@ public class ProxyGrain : Grain, IProxyGrain
         }
 
         await Task.WhenAll(_clientListening, _serverListening);
+        _metrics.ProxyGrainDeactivated();
         
         await base.OnDeactivateAsync(reason, cancellationToken);
     }
@@ -62,11 +68,19 @@ public class ProxyGrain : Grain, IProxyGrain
         if (!_httpContextResolver.TryExtract(_id, out var httpContext))
             return;
 
-        var serverWebSocket = new ClientWebSocket();
-        await serverWebSocket.ConnectAsync(new Uri(webSocketServerUrl), default);
-        _serverWebSocket = serverWebSocket;
-        
+        // todo use existing server connection if it's established
+        if (_serverWebSocket == null || _serverWebSocket.State != WebSocketState.Open)
+        {
+            var serverWebSocket = new ClientWebSocket();
+            await serverWebSocket.ConnectAsync(new Uri(webSocketServerUrl), default);
+            _serverWebSocket = serverWebSocket;
+        }
+
         // todo kill existing client connection
+        if (_clientWebSocket != null && _clientWebSocket.State == WebSocketState.Open)
+        {
+            await _clientWebSocket.CloseOutputAsync(WebSocketCloseStatus.MandatoryExtension, "new client", default);
+        }
         
         _clientWebSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
         _clientListeningTcs = new TaskCompletionSource();
